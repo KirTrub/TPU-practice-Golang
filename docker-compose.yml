@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine  
+    container_name: hospital_dbb
+    restart: always 
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=hospital
+    ports:
+      - "8085:8085"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data 
+
+  backend:
+    container_name: hospital_backendd
+    build:
+      context: ./server  
+    restart: always
+    ports:
+      - "8080:8080" 
+    depends_on:
+      - db 
+    environment:
+      - DATABASE_URL=postgres://admin:secret@db:5432/hospital?sslmode=disable
+ 
+  frontend:
+    container_name: hospital_frontendd
+    build:
+      context: ./web
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    depends_on:
+      - backend
